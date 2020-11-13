@@ -14,6 +14,7 @@ const (
 	versionNumber   = "1.0.0-dev"
 	mobStashName    = "mob-stash-name"
 	wipBranchPrefix = "mob/"
+	branchSuffixSeparator = "/"
 )
 
 var (
@@ -64,7 +65,7 @@ func getDefaultConfiguration() Configuration {
 		WipCommitMessage:                  "mob next [ci-skip]",
 		VoiceCommand:                      voiceCommand,
 		NotifyCommand:                     notifyCommand,
-		MobNextStay:                       false,
+		MobNextStay:                       true,
 		MobStartIncludeUncommittedChanges: false,
 		Debug:                             false,
 		WipBranchQualifier:                "",
@@ -222,7 +223,7 @@ func determineBranches(branch string, branchQualifier string, branches string) (
 	suffix := ""
 
 	if branchQualifier != "" {
-		suffix = "/" + branchQualifier
+		suffix = branchSuffixSeparator + branchQualifier
 	}
 
 	preparedBranch := strings.ReplaceAll(branch, wipBranchPrefix, "")
@@ -239,19 +240,10 @@ func determineBranches(branch string, branchQualifier string, branches string) (
 		suffix = preparedBranch[index:]
 	}
 
-	if branch == "mob-session" || branch == "master" {
-		baseBranch = "master"
-		if branchQualifier != "" {
-			wipBranch = wipBranchPrefix + baseBranch + suffix
-		} else {
-			wipBranch = "mob-session"
-		}
-	} else {
-		baseBranch = strings.ReplaceAll(strings.ReplaceAll(branch, wipBranchPrefix, ""), suffix, "")
-		wipBranch = wipBranchPrefix + baseBranch + suffix
-	}
+	baseBranch = strings.ReplaceAll(strings.ReplaceAll(branch, wipBranchPrefix, ""), suffix, "")
+	wipBranch = wipBranchPrefix + baseBranch + suffix
 
-	debug("on branch " + branch + " => BASE " + baseBranch + " WIP " + wipBranch + " with branches " + strings.Join(localBranches, ","))
+	sayInfo("on branch " + branch + " => BASE " + baseBranch + " WIP " + wipBranch + " with branches " + strings.Join(localBranches, ","))
 	return
 }
 
@@ -563,12 +555,35 @@ func isMobProgramming() bool {
 	return currentWipBranch == currentBranch
 }
 
-func hasLocalBranch(branch string) bool {
-	return strings.Contains(gitBranches(), branch)
+func hasLocalBranch(localBranch string) bool {
+	localBranchesRaw := gitBranches()
+	debug("Local Branches: " + localBranchesRaw)
+	debug("Local Branch: " + localBranch)
+
+	localBranches := strings.Split(localBranchesRaw, "\n")
+	for i := 0; i < len(localBranches); i++ {
+		if localBranches[i] == localBranch {
+			return true
+		}
+	}
+
+	return false
 }
 
 func hasRemoteBranch(branch string) bool {
-	return strings.Contains(gitRemoteBranches(), configuration.RemoteName+"/"+branch)
+	remoteBranchesRaw := gitRemoteBranches()
+	remoteBranch := configuration.RemoteName + "/" + branch
+	debug("Remote Branches: " + remoteBranchesRaw)
+	debug("Remote Branch: " + remoteBranch)
+
+	remoteBranches := strings.Split(remoteBranchesRaw, "\n")
+	for i := 0; i < len(remoteBranches); i++ {
+		if remoteBranches[i] == remoteBranch {
+			return true
+		}
+	}
+
+	return false
 }
 
 func gitBranches() string {
@@ -632,8 +647,8 @@ func help() {
 	say("Add --debug to any option to enable verbose logging")
 	sayEmptyLine()
 	say("EXAMPLES")
-	say("mob start 10 \t\t\t# start 10 min session in wip branch 'mob-session'")
-	say("mob start --branch green \t# start session in wip branch 'mob/<base-branch>/green'")
+	say("mob start 10 \t\t\t# start 10 min session in wip branch 'mob/<base-branch>'")
+	say("mob start --branch green \t# start session in wip branch 'mob/<base-branch>__green'")
 	say("mob next --stay\t\t\t# handover code and stay on wip branch")
 	say("mob done \t\t\t# get changes back to base branch")
 	say("mob moo \t\t\t# be amazed")

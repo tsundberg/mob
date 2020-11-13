@@ -35,16 +35,16 @@ func TestParseArgsMessage(t *testing.T) {
 }
 
 func TestDetermineBranches(t *testing.T) {
-	assertDetermineBranches(t, "master", "", "", "master", "mob-session")
-	assertDetermineBranches(t, "mob-session", "", "", "master", "mob-session")
+	assertDetermineBranches(t, "master", "", "", "master", "mob/master")
+	assertDetermineBranches(t, "mob/master", "", "", "master", "mob/master")
 
-	assertDetermineBranches(t, "master", "green", "", "master", "mob/master/green")
-	assertDetermineBranches(t, "mob/master/green", "", "", "master", "mob/master/green")
+	assertDetermineBranches(t, "master", "green", "", "master", "mob/master__green")
+	assertDetermineBranches(t, "mob/master__green", "", "", "master", "mob/master__green")
 
 	assertDetermineBranches(t, "feature1", "", "", "feature1", "mob/feature1")
 	assertDetermineBranches(t, "mob/feature1", "", "", "feature1", "mob/feature1")
-	assertDetermineBranches(t, "mob/feature1/green", "", "", "feature1", "mob/feature1/green")
-	assertDetermineBranches(t, "feature1", "green", "", "feature1", "mob/feature1/green")
+	assertDetermineBranches(t, "mob/feature1__green", "", "", "feature1", "mob/feature1__green")
+	assertDetermineBranches(t, "feature1", "green", "", "feature1", "mob/feature1__green")
 
 	assertDetermineBranches(t, "feature/test", "", "feature/test", "feature/test", "mob/feature/test")
 	assertDetermineBranches(t, "mob/feature/test", "", "feature/test\nmob/feature/test", "feature/test", "mob/feature/test")
@@ -146,8 +146,8 @@ func TestStart(t *testing.T) {
 
 	start()
 
-	assertOnBranch(t, "mob-session")
-	assertMobSessionBranches(t, "mob-session")
+	assertOnBranch(t, "mob/master")
+	assertMobSessionBranches(t, "mob/master")
 }
 
 func TestStartWithMultipleExistingBranches(t *testing.T) {
@@ -165,6 +165,7 @@ func TestStartWithMultipleExistingBranches(t *testing.T) {
 
 func TestStartWithMultipleExistingBranchesAndEmptyWipBranchQualifier(t *testing.T) {
 	output := setup(t)
+	configuration.Debug = true
 
 	configuration.WipBranchQualifier = "green"
 	start()
@@ -173,7 +174,7 @@ func TestStartWithMultipleExistingBranchesAndEmptyWipBranchQualifier(t *testing.
 	configuration.WipBranchQualifier = ""
 	configuration.WipBranchQualifierSet = true
 	start()
-	assertOnBranch(t, "mob-session")
+	assertOnBranch(t, "mob/master")
 	assertOutputNotContains(t, output, "qualified mob branches detected")
 }
 
@@ -184,13 +185,13 @@ func TestStartWithMultipleExistingBranchesWithStay(t *testing.T) {
 	configuration.WipBranchQualifier = "green"
 	assertOnBranch(t, "master")
 	start()
-	assertOnBranch(t, "mob/master/green")
+	assertOnBranch(t, "mob/master__green")
 	next()
-	assertOnBranch(t, "mob/master/green")
+	assertOnBranch(t, "mob/master__green")
 
 	configuration.WipBranchQualifier = ""
 	start()
-	assertOnBranch(t, "mob/master/green")
+	assertOnBranch(t, "mob/master__green")
 	assertOutputNotContains(t, output, "qualified mob branches detected")
 }
 
@@ -200,8 +201,8 @@ func TestStartNextWithBranch(t *testing.T) {
 	configuration.WipBranchQualifier = "green"
 
 	start()
-	assertOnBranch(t, "mob/master/green")
-	assertMobSessionBranches(t, "mob/master/green")
+	assertOnBranch(t, "mob/master__green")
+	assertMobSessionBranches(t, "mob/master__green")
 	configuration.WipBranchQualifier = ""
 
 	next()
@@ -209,7 +210,7 @@ func TestStartNextWithBranch(t *testing.T) {
 
 	configuration.WipBranchQualifier = "green"
 	reset()
-	assertNoMobSessionBranches(t, "mob/master/green")
+	assertNoMobSessionBranches(t, "mob/master__green")
 }
 
 func TestStartNextStartWithBranch(t *testing.T) {
@@ -219,13 +220,13 @@ func TestStartNextStartWithBranch(t *testing.T) {
 	assertOnBranch(t, "master")
 
 	start()
-	assertOnBranch(t, "mob/master/green")
+	assertOnBranch(t, "mob/master__green")
 
 	next()
-	assertOnBranch(t, "mob/master/green")
+	assertOnBranch(t, "mob/master__green")
 
 	start()
-	assertOnBranch(t, "mob/master/green")
+	assertOnBranch(t, "mob/master__green")
 }
 
 func TestStartNextOnFeatureWithBranch(t *testing.T) {
@@ -237,7 +238,7 @@ func TestStartNextOnFeatureWithBranch(t *testing.T) {
 	assertOnBranch(t, "feature1")
 
 	start()
-	assertOnBranch(t, "mob/feature1/green")
+	assertOnBranch(t, "mob/feature1__green")
 
 	next()
 	assertOnBranch(t, "feature1")
@@ -249,7 +250,7 @@ func TestReset(t *testing.T) {
 	reset()
 
 	assertOnBranch(t, "master")
-	assertNoMobSessionBranches(t, "mob-session")
+	assertNoMobSessionBranches(t, "mob/master")
 }
 
 func TestResetCommit(t *testing.T) {
@@ -257,12 +258,12 @@ func TestResetCommit(t *testing.T) {
 	start()
 	createFile(t, "example.txt", "content")
 	next()
-	assertMobSessionBranches(t, "mob-session")
+	assertMobSessionBranches(t, "mob/master")
 
 	reset()
 
 	assertOnBranch(t, "master")
-	assertNoMobSessionBranches(t, "mob-session")
+	assertNoMobSessionBranches(t, "mob/master")
 }
 
 func TestStartUnstagedChanges(t *testing.T) {
@@ -273,7 +274,7 @@ func TestStartUnstagedChanges(t *testing.T) {
 	start()
 
 	assertOnBranch(t, "master")
-	assertNoMobSessionBranches(t, "mob-session")
+	assertNoMobSessionBranches(t, "mob/master")
 	assertOutputContains(t, output, "fix with 'mob start --include-uncommitted-changes'")
 }
 
@@ -284,8 +285,8 @@ func TestStartIncludeUnstagedChanges(t *testing.T) {
 
 	start()
 
-	assertOnBranch(t, "mob-session")
-	assertMobSessionBranches(t, "mob-session")
+	assertOnBranch(t, "mob/master")
+	assertMobSessionBranches(t, "mob/master")
 }
 
 func TestStartIncludeUntrackedFiles(t *testing.T) {
@@ -295,7 +296,7 @@ func TestStartIncludeUntrackedFiles(t *testing.T) {
 
 	start()
 
-	assertOnBranch(t, "mob-session")
+	assertOnBranch(t, "mob/master")
 }
 
 func TestStartUntrackedFiles(t *testing.T) {
@@ -312,12 +313,12 @@ func TestStartNextBackToMaster(t *testing.T) {
 	setup(t)
 	start()
 	createFile(t, "example.txt", "content")
-	assertOnBranch(t, "mob-session")
+	assertOnBranch(t, "mob/master")
 
 	next()
 
 	assertOnBranch(t, "master")
-	assertMobSessionBranches(t, "mob-session")
+	assertMobSessionBranches(t, "mob/master")
 }
 
 func TestStartNextStay(t *testing.T) {
@@ -325,23 +326,23 @@ func TestStartNextStay(t *testing.T) {
 	configuration.MobNextStay = true
 	start()
 	createFile(t, "file1.txt", "asdf")
-	assertOnBranch(t, "mob-session")
+	assertOnBranch(t, "mob/master")
 
 	next()
 
 	equals(t, strings.TrimSpace(silentgit("log", "--format=%B", "-n", "1", "HEAD")), configuration.WipCommitMessage)
-	assertOnBranch(t, "mob-session")
+	assertOnBranch(t, "mob/master")
 }
 
 func TestStartDone(t *testing.T) {
 	setup(t)
 	start()
-	assertOnBranch(t, "mob-session")
+	assertOnBranch(t, "mob/master")
 
 	done()
 
 	assertOnBranch(t, "master")
-	assertNoMobSessionBranches(t, "mob-session")
+	assertNoMobSessionBranches(t, "mob/master")
 }
 
 func TestStartDoneFeatureBranch(t *testing.T) {
@@ -355,7 +356,7 @@ func TestStartDoneFeatureBranch(t *testing.T) {
 	done()
 
 	assertOnBranch(t, "feature1")
-	assertNoMobSessionBranches(t, "mob-session")
+	assertNoMobSessionBranches(t, "mob/master")
 }
 
 func TestStartNextFeatureBranch(t *testing.T) {
@@ -369,7 +370,7 @@ func TestStartNextFeatureBranch(t *testing.T) {
 	next()
 
 	assertOnBranch(t, "feature1")
-	assertNoMobSessionBranches(t, "mob-session")
+	assertNoMobSessionBranches(t, "mob/master")
 }
 
 func TestStartDoneLocalFeatureBranch(t *testing.T) {
@@ -567,12 +568,13 @@ func TestDoneMerge(t *testing.T) {
 
 func setup(t *testing.T) *string {
 	configuration = getDefaultConfiguration()
+	configuration.MobNextStay = false
 	output := captureOutput()
 	createTestbed(t)
 	assertOnBranch(t, "master")
 	equals(t, "master", gitBranches())
 	equals(t, "origin/master", gitRemoteBranches())
-	assertNoMobSessionBranches(t, "mob-session")
+	assertNoMobSessionBranches(t, "mob/master")
 	return output
 }
 
@@ -601,7 +603,7 @@ func createTestbed(t *testing.T) {
 
 	setWorkingDir("/tmp/mob/local")
 	assertOnBranch(t, "master")
-	assertNoMobSessionBranches(t, "mob-session")
+	assertNoMobSessionBranches(t, "mob/master")
 }
 
 func setWorkingDir(dir string) {

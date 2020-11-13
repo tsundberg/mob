@@ -1,3 +1,8 @@
+# 1.0.0 (unreleased)
+- BREAKING: Changed default behavior of MobNextStay=false to MobNextStay=true.
+- BREAKING: wip branch name 'mob-session' of base branch 'master' no longer supported. Instead, every wip branch uses the naming pattern 'mob/<base-branch-name>'. So, for the base branch 'master' the wip branch name is now 'mob/master'.
+- BREAKING: with `mob start --branch green` on the base branch `master` the wip branch is now named `mob/master__green`.
+
 # 0.0.26
 - Adds way to configure the voice command via the environment variable `MOB_VOICE_COMMAND`.
 - Allow disabling voice or notification by setting the environment variables `MOB_VOICE_COMMAND` or `MOB_NOTIFY_COMMAND` to an empty string.
